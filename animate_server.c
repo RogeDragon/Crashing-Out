@@ -1,10 +1,22 @@
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
 #include <animate/animate.h>
 
-int main(int argc, char** argv, char** envp) {
+int threadpool_size;
+int server_pid;
 
-    struct canvas* canvas = animate_create_canvas(100,100,0);
-    animate_destroy_canvas(canvas);
+int main(int argc, char** argv, char** envp) 
+{
+    server_pid = getpid();
+    threadpool_size = atoi(argv[1]);
+    printf("Server PID: %d\n", server_pid);
+
+
+    // struct sigaction client_handler;
+    // client_handler
+    // sigaction(SIGUSR1, &client_handler , NULL);
     
     return 0;
 }
