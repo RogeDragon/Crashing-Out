@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
-#include <animate/animate.h>
 
 int threadpool_size;
 int server_pid;
@@ -12,11 +11,6 @@ int main(int argc, char** argv, char** envp)
     server_pid = getpid();
     threadpool_size = atoi(argv[1]);
     printf("Server PID: %d\n", server_pid);
-
-
-    // struct sigaction client_handler;
-    // client_handler
-    // sigaction(SIGUSR1, &client_handler , NULL);
     
     return 0;
 }
