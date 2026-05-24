@@ -129,6 +129,7 @@ int find_selected_item(struct dynamic_manager * dynamic_manager, void * selected
 
     }
     pthread_mutex_unlock( &(dynamic_manager->manager_mutex) );
+    return 1;
 }
 
 int pop_selected_item(struct dynamic_manager * dynamic_manager, void * selected_item, void ** returned_value)
@@ -142,6 +143,7 @@ int pop_selected_item(struct dynamic_manager * dynamic_manager, void * selected_
             return 0;
         }     
     }
+    return 1;
 }
 
 void get_item(struct dynamic_manager * dynamic_manager, int index, void ** returned_value)

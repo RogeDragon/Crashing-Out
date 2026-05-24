@@ -127,7 +127,7 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     }
     else if (strcmp(instruction, "destroy_sprite" ) == 0)
     {
-        if (!check_dynamic_manager(canvas_manager, (void *) arguments[0]) == 1) 
+        if ( (!check_dynamic_manager(canvas_manager, (void *) arguments[0])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
@@ -224,12 +224,12 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     }
     else if (strcmp(instruction, "place_sprite" ) == 0)
     {
-        if (!check_dynamic_manager(canvas_manager, (void *) arguments[0]) == 1) 
+        if ( (!check_dynamic_manager(canvas_manager, (void *) arguments[0])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
         }
-        if (!check_dynamic_manager(sprite_manager, (void *) arguments[1]) == 1) 
+        if ( (!check_dynamic_manager(sprite_manager, (void *) arguments[1])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
@@ -267,7 +267,7 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     }
     else if (strcmp(instruction, "placement_up" ) == 0)
     {
-        if (!check_dynamic_manager(placement_manager, (void *) arguments[0]) == 1) 
+        if ( (!check_dynamic_manager(placement_manager, (void *) arguments[0])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
@@ -291,7 +291,7 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
 
     else if (strcmp(instruction, "placement_down" ) == 0)
     {
-        if (!check_dynamic_manager(placement_manager, (void *) arguments[0]) == 1) 
+        if ( (!check_dynamic_manager(placement_manager, (void *) arguments[0])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
@@ -314,7 +314,7 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     }
     else if (strcmp(instruction, "placement_top" ) == 0)
     {
-        if (!check_dynamic_manager(placement_manager, (void *) arguments[0]) == 1) 
+        if ( (!check_dynamic_manager(placement_manager, (void *) arguments[0])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
@@ -337,7 +337,7 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     }
     else if (strcmp(instruction, "placement_bottom" ) == 0)
     {
-        if (!check_dynamic_manager(placement_manager, (void *) arguments[0]) == 1) 
+        if ( (!check_dynamic_manager(placement_manager, (void *) arguments[0])) == 1) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;

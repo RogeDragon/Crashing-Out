@@ -31,6 +31,8 @@ void * manage_output_buffer(void * arg)
 
 int main(int argc, char ** argv)
 {
+    if (argc != 2) return 1;
+
     //Making all the variables!, unholy abombination
     struct dynamic_manager * clients;
     dynamic_manager_init(&clients);
