@@ -27,7 +27,7 @@ void destroy_packet(struct packet * packet)
 
 void create_buffer (struct buffer ** new_buffer)
 {
-    struct buffer * buffer = (struct buffer *) malloc( sizeof(buffer));
+    struct buffer * buffer = (struct buffer *) malloc( sizeof(struct buffer));
     dynamic_manager_init(&(buffer->packet_array));
     sem_init(&(buffer->avaliable), 0, 0);
     *new_buffer = buffer;

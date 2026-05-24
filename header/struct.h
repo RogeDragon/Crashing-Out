@@ -33,7 +33,7 @@ void create_thread_safe_canvas ( struct thread_safe_canvas ** canvas, size_t wid
 void destory_thread_safe_canvas( struct thread_safe_canvas * canvas );
 void try_destory_thread_safe_canvas( struct thread_safe_canvas * canvas );
 bool non_decrement_try_destory_thread_safe_canvas(struct thread_safe_canvas * canvas);
-int  get_number_references();
+int get_number_references(struct thread_safe_canvas * canvas);
 
 void create_modified_placement(struct modified_placement ** placement, struct client * client, struct thread_safe_canvas * canvas, struct modified_sprite * sprite, ssize_t x, ssize_t y);
 void destroy_modified_placement(struct modified_placement * placement);
