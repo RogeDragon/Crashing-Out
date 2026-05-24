@@ -23,6 +23,8 @@ bool check_and_convert_arguement(char * arg, int * result)
 
 void sort_command(char * raw_command, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
 {
+    printf("Raw command: %s\n", raw_command);
+
     char * instruction = strtok(raw_command, " ");
     char * arguments[NUM_ARGS];
 
@@ -37,8 +39,27 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
             int balance;
             if ( check_user_login(arguments[0], "./user.txt" , &balance) )
             {
-                push_packet(output_buffer, "-2", get_avaliable_id(client), client);
-                return;
+                if (balance > 0)
+                {
+                    printf("Client login successful!\n");
+                    char message[100];
+                    snprintf(message, 100, "Welcome %s. Your balance is: %d", arguments[0], balance);
+                    push_packet(output_buffer, message, get_avaliable_id(client), client);
+
+                    client->state = RUNNING;
+                }
+            }
+            else
+            {
+                printf("Client login failed!\n");
+                if (balance < 0)
+                {
+                    push_packet(output_buffer, "Reject BALANCE", get_avaliable_id(client), client);
+                }
+                else
+                {
+                    push_packet(output_buffer, "Reject UNAUTHORISED", get_avaliable_id(client), client);
+                }
             }
         break;
 

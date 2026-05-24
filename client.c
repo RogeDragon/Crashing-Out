@@ -15,7 +15,7 @@ void create_client(struct client ** returned_client, int reading_fd, int writing
     client->reading = fdopen(reading_fd, "r");
     client->reading_fd = reading_fd;
     client->writing_fd = writing_fd;
-    client->state      = RUNNING;
+    client->state      = LOGIN;
 
     dynamic_manager_init(&client->sprites);
     dynamic_manager_init(&client->placements);

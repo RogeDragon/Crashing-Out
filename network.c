@@ -26,10 +26,10 @@ int signal_manager_init()
 void make_pipes( int * fds, int process_id, int type)
 {
     char c2s[64];
-    snprintf(c2s, sizeof(c2s), "./FIFO_C2S_%d", process_id);
+    snprintf(c2s, sizeof(c2s), "/tmp/FIFO_C2S_%d", process_id);
 
     char s2c[64];
-    snprintf(s2c, sizeof(s2c), "./FIFO_S2C_%d", process_id);
+    snprintf(s2c, sizeof(s2c), "/tmp/FIFO_S2C_%d", process_id);
 
     if (mkfifo(c2s, 0666) == -1)
     {
@@ -45,6 +45,8 @@ void make_pipes( int * fds, int process_id, int type)
 
     if (type == SERVER)
     {
+        kill(SIGUSR2, process_id);
+
         fds[0] = open(c2s, O_RDONLY);
         fds[1] = open(s2c, O_WRONLY);
     }
@@ -59,25 +61,29 @@ void make_pipes( int * fds, int process_id, int type)
     Checking if a user exists 
 -------------------------------------------------------------------------*/
 
-bool check_user_login (char * username, char * file_path, int * return_balance)
+bool check_user_login(char *username, char *file_path, int *return_balance)
 {
-    FILE * users_list = fopen(file_path, "r");
-
-    char line[64];
-    while ( fgets(line, sizeof(line), users_list) != NULL )
+    FILE *users_list = fopen(file_path, "r");
+    if (users_list == NULL)
     {
-        char * name = strtok(line, " ");
-        if (strcmp(name, username) != 0) continue;
+        return false;
+    }
 
-        int balance = atoi(strtok(NULL, " "));
-        *return_balance = balance; 
+    char * clean_username = strtok(username, "\n");
+    char line[64];
 
-        if (balance > 0) return true;
-        else return false;
+    while (fgets(line, sizeof(line), users_list) != NULL)
+    {
+        char *name = strtok(line, " \n");
+        *return_balance = atoi(strtok(NULL, " \n"));
+
+        if (strcmp(name, clean_username) == 0)
+        {
+            return (*return_balance > 0);
+        }
     }
 
     fclose(users_list);
-
     return false;
 }
 
