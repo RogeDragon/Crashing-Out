@@ -49,7 +49,6 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
             }
             else
             {
-                printf("Client login failed!\n");
                 if (balance < 0)
                 {
                     push_packet(output_buffer, "Reject BALANCE", get_avaliable_id(client), client);
