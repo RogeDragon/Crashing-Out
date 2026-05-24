@@ -45,8 +45,6 @@ void make_pipes( int * fds, int process_id, int type)
 
     if (type == SERVER)
     {
-        kill(SIGUSR2, process_id);
-
         fds[0] = open(c2s, O_RDONLY);
         fds[1] = open(s2c, O_WRONLY);
     }

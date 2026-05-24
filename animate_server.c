@@ -114,10 +114,10 @@ int main(int argc, char ** argv)
                 {
                     struct signalfd_siginfo info;
                     read(signal_fd, &info, sizeof(info));
-                    kill(info.ssi_pid, SIGUSR2);
 
                     int fds[2];
                     make_pipes(fds, info.ssi_pid ,SERVER);
+                    kill(info.ssi_pid, SIGUSR2);
 
                     add_file_descriptor(file_monitor, fds[0]);
 
