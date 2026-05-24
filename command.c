@@ -41,7 +41,7 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
                 if (balance > 0)
                 {
                     char message[100];
-                    snprintf(message, 100, "Welcome %s. Your balance is: %d", arguments[0], balance);
+                    snprintf(message, 100, "Welcome %s. Your balance is: %d\n", arguments[0], balance);
                     push_packet(output_buffer, message, get_avaliable_id(client), client);
 
                     client->state = RUNNING;
@@ -51,11 +51,11 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
             {
                 if (balance < 0)
                 {
-                    push_packet(output_buffer, "Reject BALANCE", get_avaliable_id(client), client);
+                    push_packet(output_buffer, "Reject BALANCE\n", get_avaliable_id(client), client);
                 }
                 else
                 {
-                    push_packet(output_buffer, "Reject UNAUTHORISED", get_avaliable_id(client), client);
+                    push_packet(output_buffer, "Reject UNAUTHORISED\n", get_avaliable_id(client), client);
                 }
             }
         break;

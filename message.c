@@ -110,10 +110,9 @@ void * worker_thread(void * arg)
     struct buffer * buffer = provided_threadpool->buffer;
 
     while (1)
-    {
+    {        
         struct node * returned_node;
         pop_node_message_queue(message_queue, &returned_node); // this waits the thread with a condition variable!
-
         sort_command(returned_node->message, returned_node->client, canvas_manager, sprite_manager, placement_manager, buffer);
 
         free(returned_node->message);
