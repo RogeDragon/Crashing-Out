@@ -13,19 +13,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include "manager.h"
 
-/*************************************************************************
-    Dynamic Manager Structs
--------------------------------------------------------------------------*/
-
-struct dynamic_manager
-{
-    int              number_items;
-    int              capacity_items;
-    void     **      struct_array;
-    
-    pthread_mutex_t  manager_mutex;
-};
 
 /*************************************************************************
     Dynamic Manager 'Member Functions'
@@ -43,6 +32,7 @@ int dynamic_manager_init (struct dynamic_manager ** dynamic_manager)
     (*dynamic_manager)->number_items   = 0;
     (*dynamic_manager)->capacity_items = 4;
     (*dynamic_manager)->struct_array    = (void *) calloc( (*dynamic_manager)->capacity_items ,  sizeof(void *));
+    
     pthread_mutex_init(&(*dynamic_manager)->manager_mutex, NULL);
 
     if ((*dynamic_manager)->struct_array == NULL)
@@ -51,8 +41,6 @@ int dynamic_manager_init (struct dynamic_manager ** dynamic_manager)
         free(*dynamic_manager);
         return 1;
     }
-
-    printf("Canvas Manager: Canvas Manger Created\n");
 
     return 0;
 }
@@ -66,8 +54,6 @@ int push_dynamic_manager (struct dynamic_manager * dynamic_manager, void * new_v
         dynamic_manager->capacity_items = dynamic_manager->capacity_items * 2;
         dynamic_manager->struct_array    = (void *) realloc(dynamic_manager->struct_array, dynamic_manager->capacity_items * sizeof(void *));
 
-        printf("Resize: Canvas Array Has Been Resized \n");
-
         if (dynamic_manager->struct_array == NULL)
         {
             pthread_mutex_unlock(&(dynamic_manager->manager_mutex));
@@ -77,23 +63,8 @@ int push_dynamic_manager (struct dynamic_manager * dynamic_manager, void * new_v
 
     dynamic_manager->struct_array[dynamic_manager->number_items++] = new_value;
     pthread_mutex_unlock(&(dynamic_manager->manager_mutex));
-
-    printf("Added: Canvas Has Been Added \n");
     
     return 0;
-}
-
-void destory_dynamic_manager(struct dynamic_manager * dynamic_manager)
-{
-    for (int i = 0; i < dynamic_manager->number_items; i++)
-    {
-        free(dynamic_manager->struct_array[i]);
-    }
-
-    pthread_mutex_destroy( &(dynamic_manager->manager_mutex) );
-
-    free(dynamic_manager->struct_array);
-    free(dynamic_manager);
 }
 
 int pop_dynamic_manager_item(struct dynamic_manager * dynamic_manager, void ** returned_value, int index)
@@ -104,8 +75,6 @@ int pop_dynamic_manager_item(struct dynamic_manager * dynamic_manager, void ** r
     {
         dynamic_manager->capacity_items = dynamic_manager->capacity_items/2;
         dynamic_manager->struct_array    = (void *) realloc(dynamic_manager->struct_array, dynamic_manager->capacity_items * sizeof(void *));
-
-        printf("Resize: Canvas Array Has Been Resized \n");
 
         if (dynamic_manager->struct_array == NULL) 
         {
@@ -121,7 +90,6 @@ int pop_dynamic_manager_item(struct dynamic_manager * dynamic_manager, void ** r
         dynamic_manager->struct_array[x] = dynamic_manager->struct_array[x + 1];
     }
 
-    printf("Popped: Canvas Has Been Popped \n");
     dynamic_manager->number_items--;
     pthread_mutex_unlock( &(dynamic_manager->manager_mutex) );
 
@@ -140,13 +108,67 @@ int check_dynamic_manager (struct dynamic_manager * dynamic_manager, void * sele
             pthread_mutex_unlock( &(dynamic_manager->manager_mutex) );
             return 0;
         }
-        
-
     }
 
     pthread_mutex_unlock( &(dynamic_manager->manager_mutex) );
     return 1;
 }
+
+int find_selected_item(struct dynamic_manager * dynamic_manager, void * selected_item, void ** returned_value)
+{
+    pthread_mutex_lock( &(dynamic_manager->manager_mutex) );
+    for (int x = 0; x < dynamic_manager->number_items; x++)
+    {
+        void * current_item = (dynamic_manager->struct_array)[x];
+        if (current_item == selected_item)
+        {
+            *returned_value = current_item;
+            pthread_mutex_unlock( &(dynamic_manager->manager_mutex) );
+            return 0;
+        }     
+
+    }
+    pthread_mutex_unlock( &(dynamic_manager->manager_mutex) );
+}
+
+int pop_selected_item(struct dynamic_manager * dynamic_manager, void * selected_item, void ** returned_value)
+{
+    for (int x = 0; x < dynamic_manager->number_items; x++)
+    {
+        void * current_item = (dynamic_manager->struct_array)[x];
+        if (current_item == selected_item)
+        {
+            pop_dynamic_manager_item(dynamic_manager, returned_value, x);
+            return 0;
+        }     
+    }
+}
+
+void get_item(struct dynamic_manager * dynamic_manager, int index, void ** returned_value)
+{
+    pthread_mutex_lock( &(dynamic_manager->manager_mutex) );
+    *returned_value = dynamic_manager->struct_array[index]; 
+    pthread_mutex_unlock( &(dynamic_manager->manager_mutex) ); 
+}
+
+int get_number_items(struct dynamic_manager * dynamic_manager)
+{
+    pthread_mutex_lock( &(dynamic_manager->manager_mutex) );
+    int number_items = dynamic_manager->number_items;
+    pthread_mutex_unlock( &(dynamic_manager->manager_mutex) ); 
+
+    return number_items;
+}
+
+int get_capacity_items(struct dynamic_manager * dynamic_manager)
+{
+    pthread_mutex_lock( &(dynamic_manager->manager_mutex) );
+    int capacity = dynamic_manager->capacity_items;
+    pthread_mutex_unlock( &(dynamic_manager->manager_mutex) ); 
+
+    return capacity;
+}
+
 
 /*************************************************************************
     Testing Functions + Testing Structs
