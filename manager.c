@@ -141,7 +141,7 @@ int pop_selected_item(struct dynamic_manager * dynamic_manager, void * selected_
         {
             pop_dynamic_manager_item(dynamic_manager, returned_value, x);
             return 0;
-        }     
+        }
     }
     return 1;
 }

@@ -93,8 +93,6 @@ bool check_user_login(char *username, char *file_path, int *return_balance)
 
 void add_file_descriptor (int epoll_fd, int file_descriptor)
 {
-    printf("Adding file descriptor: %d\n", file_descriptor);
-
     struct epoll_event event;
     event.events = EPOLLIN;
     event.data.fd = file_descriptor;

@@ -49,8 +49,6 @@ int push_node_message_queue(struct message_queue * selected_message_queue, char 
 
     selected_message_queue->tail = new_node;
 
-    printf("Node: A Node Has Been Pushed! \n");
-
     pthread_mutex_unlock( &(selected_message_queue->tail_lock) );
     pthread_cond_signal( &(selected_message_queue->queue_condition) );
 
@@ -69,9 +67,6 @@ int pop_node_message_queue(struct message_queue * selected_message_queue, struct
     selected_message_queue->head = selected_message_queue->head->next;
     (*returned_node)->next = NULL;
     (*returned_node)->previous = NULL;
-
-    printf("Node: A Node Has Been Popped! \n");
-    printf("Message: %s\n", (*returned_node)->message);
 
     pthread_mutex_unlock( &(selected_message_queue->head_lock) );
     return 0;
@@ -103,11 +98,6 @@ int destroy_message_queue(struct message_queue * selected_message_queue)
     Thread Pool Handler Function
 -------------------------------------------------------------------------*/
 
-void placeholder_function()
-{
-    printf("Node: Node Processed! \n");
-}
-
 void * worker_thread(void * arg)
 {
     struct threadpool * provided_threadpool = (struct threadpool * ) arg;
@@ -124,9 +114,7 @@ void * worker_thread(void * arg)
         struct node * returned_node;
         pop_node_message_queue(message_queue, &returned_node); // this waits the thread with a condition variable!
 
-        printf("Before sort_command\n");
         sort_command(returned_node->message, returned_node->client, canvas_manager, sprite_manager, placement_manager, buffer);
-        printf("After sort_command\n");
 
         free(returned_node->message);
         free(returned_node);
