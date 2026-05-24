@@ -77,7 +77,7 @@ int main(int argc, char ** argv)
  
     //setting up the server
     int server_pid = getpid();
-    printf("Server PID: %d\n", server_pid);
+    printf("Server PID: %d.\n", server_pid);
 
     sigset_t mask;
     sigemptyset(&mask);
