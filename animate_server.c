@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
                             char * message = (char *) malloc(strlen(buffer));
                             strcpy(message, buffer);
-
+                            
                             push_node_message_queue(message_queue, message, selected_client);
                         }
                     }   
@@ -130,10 +130,13 @@ int main(int argc, char** argv) {
                     char buffer[100];
                     read(fds[0], buffer, sizeof(buffer));
 
+                    printf("%s", buffer);
+
                     char * instruction = strtok(buffer, " ");
                     (void) instruction; // the client make sures the instruction is right!
 
                     char * name = strtok(NULL, " ");
+                    printf("%s", name);
 
                     int balance;
                     if ( check_user_login(name, "users.txt", &balance) )

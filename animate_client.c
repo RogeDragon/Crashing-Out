@@ -61,20 +61,22 @@ void * manage_inputs( void * arg )
                     fgets(buffer, 100, read_file);
                     if (atoi(buffer) > 0)
                     {
-                        printf("Welcome %s. Your balance is %s", name, buffer);
+                        name[strcspn(name, "\n")] = '\0';
+                        printf("Welcome %s. Your balance is %s\n", name, buffer);
                         fflush(stdout);
 
                         state = running;
                     }
                     else if (atoi(buffer)  == -2)
                     {
-                        printf("Reject UNAUTHORISED");
+                        printf("Reject UNAUTHORISED\n");
+                        fflush(stdout);
                     }
                     else
                     {
-                        printf("Reject BALANCE");
+                        printf("Reject BALANCE\n");
+                        fflush(stdout);
                     }
-
                 break;
 
                 case running:
@@ -123,12 +125,17 @@ int main(int argc, char ** argv)
                 while (1)
                 {
                     fgets(buffer, 100, stdin);
+
+                    char message[100];
+                    strcpy(message, buffer);
+
                     char * instruction = strtok(buffer, " ");
+                    char * argument = strtok(NULL, " ");
 
                     if (strcmp(instruction, "Login") == 0)
                     {
-                        strcpy(name, buffer);
-                        write(file_descriptors[0], buffer, strlen(buffer));
+                        strcpy(name, argument);
+                        write(file_descriptors[0], message, strlen(message));
                     }
                 }
             break;
