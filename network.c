@@ -20,8 +20,8 @@ void open_pipes_client(FILE **FILES, int process_id)
     char server_to_client[50];
     char client_to_server[50];
 
-    sprintf(server_to_client, "/tmp/FIFO_S2C_%d", process_id);
-    sprintf(client_to_server, "/tmp/FIFO_C2S_%d", process_id);
+    sprintf(server_to_client, "FIFO_S2C_%d", process_id);
+    sprintf(client_to_server, "FIFO_C2S_%d", process_id);
 
     FILES[1] = fopen(client_to_server, "w");
     FILES[0] = fopen(server_to_client, "r");
@@ -32,8 +32,8 @@ void open_pipes_server(FILE **FILES, int process_id, int * reading_fd)
     char server_to_client[50];
     char client_to_server[50];
 
-    sprintf(server_to_client, "/tmp/FIFO_S2C_%d", process_id);
-    sprintf(client_to_server, "/tmp/FIFO_C2S_%d", process_id);
+    sprintf(server_to_client, "FIFO_S2C_%d", process_id);
+    sprintf(client_to_server, "FIFO_C2S_%d", process_id);
 
     *reading_fd = open(client_to_server, O_RDONLY);
     FILES[0] = fopen(server_to_client,  "w");
