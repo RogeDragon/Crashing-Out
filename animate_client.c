@@ -94,6 +94,7 @@ int main(int argc, char ** argv)
                 char buffer[100];
                 fgets(buffer, 100, stdin);
                 write(file_descriptors[0], buffer, strlen(buffer));
+                write(file_descriptors[0], "\n", 1);
             break;
 
             case waiting:

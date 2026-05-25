@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
                         if (selected_client->reading_fd == ready_events[i].data.fd)
                         {
                             char buffer[100];
-                            read(selected_client->reading_fd, buffer, 100);
+                            fgets(buffer, sizeof(buffer), selected_client->reading);
 
                             char * message = (char *) malloc(strlen(buffer));
                             strcpy(message, buffer);
