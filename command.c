@@ -23,7 +23,6 @@ bool check_and_convert_arguement(char * arg, int * result)
 
 void sort_command(char * raw_command, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
 {
-
     char * instruction = strtok(raw_command, " ");
     char * arguments[NUM_ARGS];
 
@@ -32,37 +31,7 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
         arguments[i] = strtok(NULL, " ");
     }
 
-    switch (client->state)
-    {
-        case LOGIN:  
-            int balance;
-            if ( check_user_login(arguments[0], "./users.txt" , &balance) )
-            {
-                if (balance > 0)
-                {
-                    char message[100];
-                    snprintf(message, 100, "Welcome %s. Your balance is: %d", arguments[0], balance);
-                    push_packet(output_buffer, message, get_avaliable_id(client), client);
-                    client->state = RUNNING;
-                }
-            }
-            else
-            {
-                if (balance < 0)
-                {
-                    push_packet(output_buffer, "Reject BALANCE", get_avaliable_id(client), client);
-                }
-                else
-                {
-                    push_packet(output_buffer, "Reject UNAUTHORISED", get_avaliable_id(client), client);
-                }
-            }
-        break;
-
-        default:
-            execute_command(instruction, arguments, client, canvas_manager, sprite_manager, placement_manager, output_buffer);
-        break;
-    }
+    execute_command(instruction, arguments, client, canvas_manager, sprite_manager, placement_manager, output_buffer);
 }
 
 void execute_command(char * instruction, char ** arguments, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)

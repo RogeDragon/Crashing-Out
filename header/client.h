@@ -15,8 +15,6 @@ enum client_state
 
 struct client
 {
-    enum client_state state;
-
     pthread_mutex_t client_lock; //this is a lock for the id!
     int avaliable_id; // a monotonic increasing counter
     int next_packet_id;

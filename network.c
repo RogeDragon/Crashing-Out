@@ -48,6 +48,8 @@ void make_pipes( int * fds, int process_id, int type)
 
 bool check_user_login(char *username, char *file_path, int *return_balance)
 {
+    *return_balance = -999;
+    
     FILE *users_list = fopen(file_path, "r");
     if (users_list == NULL)
     {

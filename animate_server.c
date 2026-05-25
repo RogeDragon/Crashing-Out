@@ -69,11 +69,13 @@ int main(int argc, char** argv) {
 
     pthread_t output_thread;
 
-    struct output_thread_data * data = (struct output_thread_data *) malloc( sizeof(struct output_thread_data) );
-    data->buffer = buffer;
-    data->clients = clients;
-
-    pthread_create(&output_thread, NULL, &manage_output_buffer, (void *) data); 
+    struct output_thread_data data = 
+    {
+        .buffer  = buffer,
+        .clients = clients
+    };
+    
+    pthread_create(&output_thread, NULL, &manage_output_buffer, (void *) &data); 
 
     while (1)
     {
@@ -98,6 +100,7 @@ int main(int argc, char** argv) {
                         if (selected_client->reading_fd == ready_events[i].data.fd)
                         {
                             char buffer[100];
+                            fgets(buffer, sizeof(buffer), selected_client->reading);
                             read(selected_client->reading_fd, buffer, 100);
 
                             char * message = (char *) malloc(strlen(buffer));
@@ -119,16 +122,64 @@ int main(int argc, char** argv) {
                 event.data.fd = fds[0];
                 epoll_ctl(polly, EPOLL_CTL_ADD, fds[0], &event);
 
-                struct client * new_client;
-                create_client(&new_client,  fds[0],  fds[1]);
-                push_dynamic_manager(clients, (void *) new_client);
+                struct epoll_event ready;
+                epoll_wait(polly, &ready, 1, -1);
 
-                state = waiting;
+                if (ready.events & EPOLLIN)
+                {
+                    char buffer[100];
+                    read(fds[0], buffer, sizeof(buffer));
+
+                    char * instruction = strtok(buffer, " ");
+                    (void) instruction; // the client make sures the instruction is right!
+
+                    char * name = strtok(NULL, " ");
+
+                    int balance;
+                    if ( check_user_login(name, "users.txt", &balance) )
+                    {
+                        char balance_array[20];
+                        sprintf(balance_array, "%d", balance);
+
+                        write(fds[1], balance_array, 20);
+                        write(fds[1], "\n", 1);
+
+                        struct client * new_client;
+                        create_client(&new_client,  fds[0],  fds[1]);
+                        push_dynamic_manager(clients, (void *) new_client);
+                        state = waiting;
+                    }
+                    else 
+                    {
+                        if (balance < 0)
+                        {
+                            write(fds[1], "-1", 1);
+                            write(fds[1], "\n", 1);
+                        }
+                        else
+                        {
+                            write(fds[1], "-2", 1);
+                            write(fds[1], "\n", 1);
+                        }
+
+                        close(fds[0]);
+                        close(fds[1]);
+
+                        sleep(1);
+                        char c2s[64];
+                        snprintf(c2s, sizeof(c2s), "./FIFO_C2S_%d", signal_info.si_pid);
+
+                        char s2c[64];
+                        snprintf(s2c, sizeof(s2c), "./FIFO_S2C_%d", signal_info.si_pid);
+
+                        unlink(c2s);
+                        unlink(s2c);
+                    }
+                    
+                }
             break;
         }
     }
-
-    free(data);
 
     return 0;
 }
