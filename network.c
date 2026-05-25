@@ -13,10 +13,10 @@
 void make_pipes( int * fds, int process_id, int type)
 {
     char c2s[64];
-    snprintf(c2s, sizeof(c2s), "/tmp/FIFO_C2S_%d", process_id);
+    snprintf(c2s, sizeof(c2s), "./FIFO_C2S_%d", process_id);
 
     char s2c[64];
-    snprintf(s2c, sizeof(s2c), "/tmp/FIFO_S2C_%d", process_id);
+    snprintf(s2c, sizeof(s2c), "./FIFO_S2C_%d", process_id);
 
     if (mkfifo(c2s, 0666) == -1)
     {
