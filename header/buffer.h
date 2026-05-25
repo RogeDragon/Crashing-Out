@@ -26,6 +26,11 @@ struct buffer
     sem_t avaliable;
 };
 
+struct output_thread_data 
+{
+    struct buffer *          buffer;
+    struct dynamic_manager * clients;
+};
 
 /*************************************************************************
     Packet + Buffer Functions
@@ -38,5 +43,6 @@ void destroy_buffer(struct buffer * buffer);
 void push_packet (struct buffer * buffer, char * message, int packet_id, struct client * owner);
 struct packet * pop_avaliable_packets(struct dynamic_manager * clients, struct buffer * buffer);
 struct packet * get_packet(struct buffer * buffer, int index);
+void * manage_output_buffer(void * arg);
 
 #endif

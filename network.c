@@ -10,19 +10,6 @@
     Signal Processing + Pipes
 -------------------------------------------------------------------------*/
 
-int signal_manager_init()
-{
-    sigset_t mask;
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGUSR1);
-    sigaddset(&mask, SIGUSR2);
-
-    sigprocmask(SIG_BLOCK, &mask, NULL);
-    
-    int signal_fd = signalfd(-1, &mask, FNONBLOCK | O_CLOEXEC);
-    return signal_fd;
-}
-
 void make_pipes( int * fds, int process_id, int type)
 {
     char c2s[64];

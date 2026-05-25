@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include <unistd.h>
 
 /*************************************************************************
     Packet Functions
@@ -30,7 +31,9 @@ void create_buffer (struct buffer ** new_buffer)
     struct buffer * buffer = (struct buffer *) malloc( sizeof(struct buffer));
     dynamic_manager_init(&(buffer->packet_array));
     sem_init(&(buffer->avaliable), 0, 0);
+
     *new_buffer = buffer;
+
 }
 
 void destroy_buffer(struct buffer * buffer)
@@ -48,8 +51,6 @@ void destroy_buffer(struct buffer * buffer)
     free(buffer->packet_array->struct_array);
     free(buffer->packet_array);
     free(buffer);
-
-    printf("The output manager has been deleted!\n");
 }
 
 void push_packet (struct buffer * buffer, char * message, int packet_id, struct client * owner)
@@ -72,8 +73,8 @@ struct packet * pop_avaliable_packets(struct dynamic_manager * clients, struct b
         for (int i = 0; i < get_number_items(buffer->packet_array); i++)
         {
             struct packet * value;
-            get_item(buffer->packet_array, i, (void **) &value);    
-
+            get_item(buffer->packet_array, i, (void **) &value);   
+    
             if (value->packet_id == get_next_packet_id(client) && value->owner == client)
             {
                 struct packet * returned_value;
@@ -83,6 +84,7 @@ struct packet * pop_avaliable_packets(struct dynamic_manager * clients, struct b
             }
         }
     }
+
     return NULL;
 }
 
@@ -91,6 +93,23 @@ struct packet * get_packet(struct buffer * buffer, int index)
     struct packet * returned_packet;
     get_item(buffer->packet_array, index, (void **) &returned_packet);
     return returned_packet;
+}
+
+void * manage_output_buffer(void * arg)
+{
+    struct output_thread_data * data   = (struct output_thread_data *) arg;
+    struct buffer * buffer             = data->buffer;
+    struct dynamic_manager * clients   = data->clients;
+
+    while (1)
+    {
+        struct packet * popped_packet = pop_avaliable_packets(clients, buffer);
+
+        write(popped_packet->owner->writing_fd, popped_packet->message, strlen(popped_packet->message) );
+        write(popped_packet->owner->writing_fd, "\n", 1);
+
+        destroy_packet(popped_packet);
+    }
 }
 
 /*************************************************************************

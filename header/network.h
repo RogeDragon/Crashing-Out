@@ -19,7 +19,6 @@
 #define CLIENT 1
 #define MAX_EVENTS 64
 
-int signal_manager_init();
 void make_pipes( int * fds, int process_id, int type);
 bool check_user_login (char * username, char * file_path, int * return_balance);
 void add_file_descriptor (int epoll_fd, int file_descriptor);

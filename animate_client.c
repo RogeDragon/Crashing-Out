@@ -1,98 +1,103 @@
-#include "network.h"
+
+#include <signal.h>
 #include <pthread.h>
-#include <stdio.h>
-#include <string.h>
+#include <sys/epoll.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "network.h"
 
-void * write_thread(void * arg)
+enum client_states
 {
-    int * write_fd = (int *) arg;
+    waiting,
+    connected,
+    running
+};
+
+static volatile sig_atomic_t state = waiting;
+
+void signal_handler(int signum, siginfo_t* info, void * context) 
+{
+    (void) context;
+    (void) info;
+
+    if (signum == SIGUSR2)
+    {
+        state = connected;
+    }
+}
+
+void * manage_inputs( void * arg )
+{
+    int monitor = epoll_create1(0);
+    int read_fd = *((int*) arg);
+    FILE * read_file = fdopen(read_fd , "r");
+
+    struct epoll_event event;
+    event.events = EPOLLIN;
+    event.data.fd = read_fd;
+
+    epoll_ctl(monitor, EPOLL_CTL_ADD, read_fd, &event);
 
     while (1)
     {
-        char message[50];
+        struct epoll_event ready_event;
+        int n = epoll_wait(monitor, &ready_event, 1, -1);
 
-        if (fgets(message, sizeof(message), stdin) == NULL)
+        if (n == -1)
         {
-            break;
+            continue;
         }
 
-        size_t length = strlen(message);
-        if (length > 0)
+        if (ready_event.events & EPOLLIN)
         {
-            write(*write_fd, message, length);
+            char buffer[100];
+            fgets(buffer, 100, read_file);
+            printf("%s", buffer);
+            fflush(stdout);
         }
     }
-
-    return NULL;
 }
 
-void * read_thread(void * arg)
-{
-    FILE * read_file = (FILE *) arg;
-
-    while (1)
-    {
-        char message[50];
-
-        if (fgets(message, sizeof(message), read_file) == NULL)
-        {
-            break;
-        }
-
-        printf("%s", message);
-    }
-
-    fclose(read_file);
-    return NULL;
-}
+int file_descriptors[2];
 
 int main(int argc, char ** argv)
 {
     if (argc != 2) return 1;
+    int server_pid = atoi(argv[1]);
+    int client_pid = getpid();
 
-    int client_process_id = getpid();
-    int server_process_id = atoi(argv[1]);
-    int signal_manager_fd = signal_manager_init();
-    int file_monitor = epoll_create1(0);
-
-    add_file_descriptor(file_monitor, signal_manager_fd);
-    kill(server_process_id, SIGUSR1);
-
-    int client_pipe_fds[2];
     pthread_t input_thread;
-    pthread_t read_thread_id;
+
+    struct sigaction action;
+    action.sa_sigaction = &signal_handler;
+    action.sa_flags = SA_SIGINFO;
+    sigemptyset(&action.sa_mask);
+
+    sigaction(SIGUSR1, &action, NULL);
+    sigaction(SIGUSR2, &action, NULL);
+
+    kill(server_pid, SIGUSR1);
 
     while (1)
     {
-        struct epoll_event ready_events[2];
-        int n = epoll_wait(file_monitor, ready_events, 2, -1);
-
-        for (int i = 0; i < n; i++)
+        switch (state)
         {
-            if (ready_events[i].data.fd == signal_manager_fd)
-            {
-                struct signalfd_siginfo sig_info;
-                if (read(signal_manager_fd, &sig_info, sizeof(sig_info)) == -1)
-                {
-                    perror("read");
-                    continue;
-                }
+            case connected:
+                make_pipes(file_descriptors, client_pid, CLIENT);
 
-                make_pipes(client_pipe_fds, client_process_id, CLIENT);
-
-                FILE * read_file = fdopen(client_pipe_fds[1], "r");
-                if (read_file == NULL)
-                {
-                    perror("fdopen");
-                    return 1;
-                }
-
-                pthread_create(&input_thread, NULL, write_thread, (void *) &client_pipe_fds[0]);
+                pthread_create(&input_thread, NULL, &manage_inputs, (void *) &( file_descriptors[1] ) );
                 pthread_detach(input_thread);
-                pthread_create(&read_thread_id, NULL, read_thread, (void *) read_file);
-                pthread_detach(read_thread_id);
-                break;
-            }
+                state = running;
+            break;
+
+            case running:
+                char buffer[100];
+                fgets(buffer, 100, stdin);
+                write(file_descriptors[0], buffer, strlen(buffer));
+            break;
+
+            case waiting:
+            break;
         }
     }
 

@@ -23,12 +23,11 @@ struct node
 
 struct message_queue
 {
+    int size;
     struct node *   head;
     struct node *   tail;
 
-    pthread_mutex_t head_lock;
-    pthread_mutex_t tail_lock;
-
+    pthread_mutex_t message_queue_lock;
     pthread_cond_t  queue_condition;
 };
 
@@ -36,10 +35,9 @@ struct message_queue
     Message Queue 'Member Functions'
 -------------------------------------------------------------------------*/
 
-int create_message_queue(struct message_queue ** new_message_queue);
-int push_node_message_queue(struct message_queue * selected_message_queue, char * value, struct client * client);
-int pop_node_message_queue(struct message_queue * selected_message_queue, struct node ** returned_node);
-int destroy_message_queue(struct message_queue * selected_message_queue);
+void create_message_queue(struct message_queue ** new_message_queue);
+void push_node_message_queue(struct message_queue * selected_message_queue, char * value, struct client * client);
+void pop_node_message_queue(struct message_queue * selected_message_queue, struct node ** returned_node);
 
 /*************************************************************************
     Thread Pool Structs
