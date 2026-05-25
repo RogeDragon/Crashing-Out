@@ -58,11 +58,12 @@ void * manage_inputs( void * arg )
     }
 }
 
-int file_descriptors[2];
+
 
 int main(int argc, char ** argv)
 {
     if (argc != 2) return 1;
+    int * file_descriptors = (int *) malloc( sizeof(int) * 2 );
     int server_pid = atoi(argv[1]);
     int client_pid = getpid();
 
@@ -84,7 +85,6 @@ int main(int argc, char ** argv)
         {
             case connected:
                 make_pipes(file_descriptors, client_pid, CLIENT);
-
                 pthread_create(&input_thread, NULL, &manage_inputs, (void *) &( file_descriptors[1] ) );
                 pthread_detach(input_thread);
                 state = running;
@@ -94,13 +94,13 @@ int main(int argc, char ** argv)
                 char buffer[100];
                 fgets(buffer, 100, stdin);
                 write(file_descriptors[0], buffer, strlen(buffer));
-                write(file_descriptors[0], "\n", 1);
             break;
 
             case waiting:
             break;
         }
     }
+    free(file_descriptors);
 
     return 0;
 }

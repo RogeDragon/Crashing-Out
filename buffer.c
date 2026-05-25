@@ -97,10 +97,13 @@ struct packet * get_packet(struct buffer * buffer, int index)
 
 void * manage_output_buffer(void * arg)
 {
+    printf("output\n");
     struct output_thread_data * data   = (struct output_thread_data *) arg;
     struct buffer * buffer             = data->buffer;
     struct dynamic_manager * clients   = data->clients;
+    printf("output\n");
 
+    printf("output\n");
     while (1)
     {
         struct packet * popped_packet = pop_avaliable_packets(clients, buffer);

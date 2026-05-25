@@ -59,8 +59,8 @@ bool check_user_login(char *username, char *file_path, int *return_balance)
 
     while (fgets(line, sizeof(line), users_list) != NULL)
     {
-        char *name = strtok(line, " \n");
-        *return_balance = atoi(strtok(NULL, " \n"));
+        char *name = strtok(line, " ");
+        *return_balance = atoi(strtok(NULL, " "));
 
         if (strcmp(name, clean_username) == 0)
         {

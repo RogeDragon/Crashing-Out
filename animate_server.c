@@ -69,13 +69,11 @@ int main(int argc, char** argv) {
 
     pthread_t output_thread;
 
-    struct output_thread_data data = 
-    {
-        .buffer  = buffer,
-        .clients = clients
-    };
-    
-    pthread_create(&output_thread, NULL, &manage_output_buffer, (void *) &data); 
+    struct output_thread_data * data = (struct output_thread_data *) malloc( sizeof(struct output_thread_data) );
+    data->buffer = buffer;
+    data->clients = clients;
+
+    pthread_create(&output_thread, NULL, &manage_output_buffer, (void *) data); 
 
     while (1)
     {
@@ -100,7 +98,7 @@ int main(int argc, char** argv) {
                         if (selected_client->reading_fd == ready_events[i].data.fd)
                         {
                             char buffer[100];
-                            fgets(buffer, sizeof(buffer), selected_client->reading);
+                            read(selected_client->reading_fd, buffer, 100);
 
                             char * message = (char *) malloc(strlen(buffer));
                             strcpy(message, buffer);
@@ -129,6 +127,8 @@ int main(int argc, char** argv) {
             break;
         }
     }
+
+    free(data);
 
     return 0;
 }
