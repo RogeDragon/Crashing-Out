@@ -11,6 +11,7 @@ enum client_states
     waiting,
     login,
     connected,
+    disconnect,
     running
 };
 
@@ -108,6 +109,9 @@ int main(int argc, char ** argv)
     sigaction(SIGUSR1, &action, NULL);
     sigaction(SIGUSR2, &action, NULL);
 
+    pthread_create(&input_thread, NULL, &manage_inputs, (void *) &( file_descriptors[1] ) );
+    pthread_detach(input_thread);
+
     kill(server_pid, SIGUSR1);
 
     while (1)
@@ -116,8 +120,6 @@ int main(int argc, char ** argv)
         {
             case connected:
                 make_pipes(file_descriptors, client_pid, CLIENT);
-                pthread_create(&input_thread, NULL, &manage_inputs, (void *) &( file_descriptors[1] ) );
-                pthread_detach(input_thread);
                 state = login;
             break;
 
@@ -137,15 +139,41 @@ int main(int argc, char ** argv)
                         strcpy(name, argument);
                         write(file_descriptors[0], message, strlen(message));
                     }
+                    else if (strcmp(instruction, "Disconnect") == 0)
+                    {
+                        state = disconnect;
+                    }
                 }
             break;
 
             case running:
                 fgets(buffer, 100, stdin);
+
+                if (strcmp(instruction, "Disconnect"))
+                {
+                    state = disconnect
+                }
+
                 write(file_descriptors[0], buffer, strlen(buffer));
             break;
 
             case waiting:
+            break;
+
+            case disconnect:
+                write(file_descriptors[0], "Disconnect\n", strlen("Disconnect\n"));
+
+                close(file_descriptors[0]);
+                close(file_descriptors[1]);
+
+                char c2s[64];
+                snprintf(c2s, sizeof(c2s), "./FIFO_C2S_%d", client_pid);
+
+                char s2c[64];
+                snprintf(s2c, sizeof(s2c), "./FIFO_S2C_%d", client_pid);
+
+                unlink(c2s);
+                unlink(s2c);
             break;
         }
     }

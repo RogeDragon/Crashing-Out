@@ -133,7 +133,21 @@ int main(int argc, char** argv) {
                     printf("%s", buffer);
 
                     char * instruction = strtok(buffer, " ");
-                    (void) instruction; // the client make sures the instruction is right!
+                    
+                    if (strcmp(instruction, "Disconnect"))
+                    {
+                        close(fds[0]);
+                        close(fds[1]);
+
+                        char c2s[64];
+                        snprintf(c2s, sizeof(c2s), "./FIFO_C2S_%d", signal_info.si_pid);
+
+                        char s2c[64];
+                        snprintf(s2c, sizeof(s2c), "./FIFO_S2C_%d", signal_info.si_pid);
+
+                        unlink(c2s);
+                        unlink(s2c);
+                    }
 
                     char * name = strtok(NULL, " ");
                     printf("%s", name);
