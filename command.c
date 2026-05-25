@@ -36,7 +36,7 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
     {
         case LOGIN:  
             int balance;
-            if ( check_user_login(arguments[0], "./users.txt" , &balance) )
+            if ( check_user_login(arguments[0], "users.txt" , &balance) )
             {
                 if (balance > 0)
                 {
