@@ -149,9 +149,9 @@ int main(int argc, char ** argv)
             case running:
                 fgets(buffer, 100, stdin);
 
-                if (strcmp(instruction, "Disconnect"))
+                if (strcmp(buffer, "Disconnect"))
                 {
-                    state = disconnect
+                    state = disconnect;
                 }
 
                 write(file_descriptors[0], buffer, strlen(buffer));
