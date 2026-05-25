@@ -1,20 +1,22 @@
 #include "client.h"
 #include "struct.h"
 #include <stdio.h>
+#include "network.h"
 
 /*************************************************************************
     Client Functions
 -------------------------------------------------------------------------*/
 
-void create_client(struct client ** returned_client, int reading_fd, int writing_fd)
+void create_client(struct client ** returned_client, int reading_fd, FILE * reading, FILE * writing, int pid)
 {
     struct client * client = (struct client *) malloc( sizeof(struct client) );
     client->avaliable_id = 0;
     client->next_packet_id = 0;
 
-    client->reading = fdopen(reading_fd, "r");
+    client->client_process_id = pid;
+    client->reading = reading;
+    client->writing = writing;
     client->reading_fd = reading_fd;
-    client->writing_fd = writing_fd;
 
     dynamic_manager_init(&client->sprites);
     dynamic_manager_init(&client->placements);
@@ -26,6 +28,9 @@ void create_client(struct client ** returned_client, int reading_fd, int writing
 
 void destroy_client (struct client * client)
 {
+    FILE * files[2] = {client->reading, client->writing}; 
+    close_and_unlink_pipes(files, client->client_process_id);
+
     //freeing the placements
     for (int i = 0; i < get_number_items(client->placements); i++) //find the canvas that has this one it!
     {

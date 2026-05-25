@@ -11,7 +11,7 @@ void create_packet(struct packet ** new_packet, char * message, int packet_id, s
 
     (*new_packet)->owner     = owner;
     (*new_packet)->packet_id = packet_id;
-    (*new_packet)->message   =  (char *) malloc(strlen(message) + 1);
+    (*new_packet)->message   = (char *) malloc(strlen(message) + 1);
 
     strncpy((*new_packet)->message, message, strlen(message) + 1 );
 }
@@ -104,10 +104,7 @@ void * manage_output_buffer(void * arg)
     while (1)
     {
         struct packet * popped_packet = pop_avaliable_packets(clients, buffer);
-
-        write(popped_packet->owner->writing_fd, popped_packet->message, strlen(popped_packet->message) );
-        write(popped_packet->owner->writing_fd, "\n", 1);
-
+        fprintf(popped_packet->owner->writing, "%s\n", popped_packet->message);
         destroy_packet(popped_packet);
     }
 }

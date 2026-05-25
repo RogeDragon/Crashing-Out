@@ -91,7 +91,9 @@ void * worker_thread(void * arg)
     {        
         struct node * returned_node;
         pop_node_message_queue(message_queue, &returned_node); // this waits the thread with a condition variable!
+
         sort_command(returned_node->message, returned_node->client, canvas_manager, sprite_manager, placement_manager, buffer);
+        
         free(returned_node->message);
         free(returned_node);
     }
@@ -120,7 +122,7 @@ int intialise_threadpool(int number_threads, struct threadpool ** threadpool,
 
     for (int i = 0; i < number_threads; i++)
     {
-        pthread_create(&((*threadpool)->threadpool_threads[i]), NULL, &worker_thread, (void *) (*threadpool));
+        pthread_create(&((*threadpool)->threadpool_threads[i]), NULL, &worker_thread, (void *) (*threadpool) );
     }
 
     return 0;
