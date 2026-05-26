@@ -125,14 +125,11 @@ int main (int argc, char ** argv)
 
             case login:
                 char line[256];
-                memset(line, 0, sizeof(line));
-                
                 fgets(line, 256, files[1]);
-                
+
                 char command[128];
                 char argument[128];
-                memset(command, 0, sizeof(command));
-                memset(argument, 0, sizeof(argument));
+                sscanf(line, "%s %s", command, argument);
 
                 if ( strcmp("Login", command) == 0 )
                 {

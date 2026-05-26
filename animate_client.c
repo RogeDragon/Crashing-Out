@@ -45,13 +45,12 @@ void * send_to_server(void * args)
 
                 if (strcmp(instruction, "Login") == 0)
                 {
-                    fprintf(files[1], "%s\n", buffer);
+                    fprintf(files[1], "%s", buffer);
                     fflush (files[1]);
 
                     pthread_mutex_lock(&name_lock);
                     strcpy(name, argument);
                     pthread_mutex_unlock(&name_lock);
-                    state = running;
                 }
                 else if (strcmp(instruction, "Disconnect\n") == 0)
                 {
@@ -96,8 +95,8 @@ void * recieve_from_server(void * args)
                     pthread_mutex_lock(&name_lock);
                     printf("Welcome %s. Your balance is %s", name, buffer);
                     fflush(stdout);
-
                     pthread_mutex_unlock(&name_lock);
+                    state = running;
                 }
                 else if (status == -1)
                 {
@@ -160,7 +159,6 @@ int main (int argc, char ** argv)
 
     pthread_t sending_thread;
     pthread_t receiving_thread;
-
 
     pthread_create(&sending_thread, NULL, send_to_server, (void *) files);
     pthread_create(&receiving_thread, NULL, recieve_from_server, (void *) files);
