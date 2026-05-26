@@ -8,6 +8,9 @@ void create_pipes(int process_id)
     sprintf(server_to_client, "./FIFO_S2C_%d", process_id);
     sprintf(client_to_server, "./FIFO_C2S_%d", process_id);
 
+    unlink(server_to_client);
+    unlink(client_to_server);
+
     if (mkfifo(server_to_client, 0666) == -1)
         perror("mkfifo s2c failed");
 

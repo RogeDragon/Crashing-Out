@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g -I./header -Ilibanimate/include
+CFLAGS = -Wall -Wextra -g -I./header -Ilibanimate/include -Wvla -fPIC -fsanitize=address -DNDEBUG
 
 SERVER_SRCS = animate_server.c buffer.c client.c command.c message.c manager.c network.c struct.c
 SERVER_OBJS = $(SERVER_SRCS:.c=.o)

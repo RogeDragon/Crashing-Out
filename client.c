@@ -2,6 +2,7 @@
 #include "struct.h"
 #include <stdio.h>
 #include "network.h"
+#include "debug.h"
 
 /*************************************************************************
     Client Functions

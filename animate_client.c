@@ -2,6 +2,7 @@
 #include <signal.h>
 #include "network.h"
 #include <stdatomic.h>
+#include "debug.h"
 
 enum client_states
 {
@@ -37,6 +38,10 @@ void * send_to_server(void * args)
         switch (state)
         {
             case login:
+                #if DEBUG
+                    fprintf(stderr, "(loggin client) out\n");
+                #endif
+
                 fgets(buffer, 100, stdin);
 
                 char instruction[50];
@@ -55,24 +60,34 @@ void * send_to_server(void * args)
                 else if (strcmp(instruction, "Disconnect\n") == 0)
                 {
                     fprintf(files[1], "Disconnect\n");
-                    fflush(files[1]);
                     state = disconnect;
                 }
             break;
 
             case running:
-                fgets(buffer, 100, stdin);
+                #if DEBUG
+                    fprintf(stderr, "(running client) out\n");
+                #endif
 
-                if (strcmp(buffer, "Disconnect") == 0)
+                char * running_status_out = fgets(buffer, 100, stdin);
+
+                if (running_status_out != NULL)
                 {
-                    state = disconnect;
-                }
+                    if (strcmp(buffer, "Disconnect\n") == 0)
+                    {
+                        state = disconnect;
+                    }
 
-                fprintf(files[1], "%s\n", buffer);
-                fflush(files[1]);
+                    fprintf(files[1], "%s", buffer);
+                    fflush(files[1]);
+                }
             break;
 
             case disconnect:
+                #if DEBUG
+                    fprintf(stderr, "(disconnect client) out\n");
+                #endif
+
                 alive = 0;
             break;
         }
@@ -91,6 +106,10 @@ void * recieve_from_server(void * args)
         switch (state)
         {
             case login:
+                #if DEBUG
+                    fprintf(stderr, "(loggin client) in\n");
+                #endif
+
                 fgets(buffer, 100, files[0]); //blocks until there is some data
 
                 int status = atoi(buffer);
@@ -121,9 +140,17 @@ void * recieve_from_server(void * args)
             break;
 
             case running:
-                fgets(buffer, 100, files[0]);
-                printf("%s", buffer);
-                fflush(stdout);
+                #if DEBUG
+                    fprintf(stderr, "(running client) in\n");
+                #endif
+
+                char * running_status_in = fgets(buffer, 100, files[0]);
+
+                if (running_status_in != NULL)
+                {
+                    printf("%s", buffer);
+                    fflush(stdout);
+                }
             break;
         }
     }

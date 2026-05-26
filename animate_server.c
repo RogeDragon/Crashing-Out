@@ -7,6 +7,7 @@
 #include <sys/epoll.h>
 #include "network.h"
 #include <stdatomic.h>
+#include "debug.h"
 
 #include "manager.h"
 #include "buffer.h"
@@ -15,6 +16,7 @@
 #include "message.h"
 
 #define MAX_EVENTS 256
+
 
 enum server_states
 {
@@ -39,16 +41,25 @@ void * handel_disconnect(void *args)
 
     while (1)
     {
-        for (int x = 0; x < get_number_items(args_val->clients); x++)
+        pthread_mutex_lock(&(args_val->clients->manager_mutex));
+
+        for (int x = 0; x < args_val->clients->number_items; x++)
         {
-            struct client * selected_client;
-            get_item(args_val->clients, x, (void **) &selected_client);
+            struct client * selected_client = (args_val->clients->struct_array)[x];
 
             if (kill(selected_client->client_process_id, SIGUSR1) == -1)
             {
-                push_node_message_queue(args_val->message_queue, "Disconnect", selected_client);
+                char * message = malloc(strlen("Disconnect") + 1);
+                strcpy(message, "Disconnect");
+                push_node(args_val->message_queue, "Disconnect", selected_client);
+
+                #if DEBUG
+                    fprintf(stderr, "Pushing Disconnect!");
+                #endif
             }
         }
+
+        pthread_mutex_unlock(&(args_val->clients->manager_mutex));
         sleep(1);
     }
 }
@@ -66,6 +77,11 @@ void handel_new_user(int signal, siginfo_t * info, void * context)
 int main (int argc, char ** argv)
 {
     if (argc != 2) return 1;
+
+    #if DEBUG
+        fprintf(stderr, "(main) Started Server\n");
+        fprintf(stderr, "(main) creating new dynamic variables\n");
+    #endif
 
     //intialising variables
     struct dynamic_manager * clients;
@@ -86,6 +102,11 @@ int main (int argc, char ** argv)
     struct buffer * buffer;
     create_buffer(&buffer);
 
+    #if DEBUG
+        fprintf(stderr,"(main) finished creating new dynamic variables\n");
+        fprintf(stderr,"(main) creating checking thread\n");
+    #endif
+
     pthread_t client_checker;
 
     struct handel_disconnect_args * args = malloc( sizeof( struct handel_disconnect_args ) );
@@ -94,13 +115,29 @@ int main (int argc, char ** argv)
 
     pthread_create(&client_checker, NULL, handel_disconnect, (void *) args);
 
+    #if DEBUG
+        fprintf(stderr, "(main) finished creating checking thread\n");
+    #endif
+
+    #if DEBUG
+        fprintf(stderr, "(main) creating thread pool instances\n");
+    #endif
+
     struct threadpool * threadpool;
     intialise_threadpool( atoi(argv[1]) , &threadpool, message_queue, clients, canvas_manager, sprites, placements, buffer);
+
+    #if DEBUG
+        fprintf(stderr, "(main) finished creating thread pool instances\n");
+    #endif
 
     //running the server
     int server_pid = getpid();
     printf("Server: %d.\n", server_pid);
     fflush(stdout);
+
+    #if DEBUG
+        fprintf(stderr, "(main) started singal handeling generation\n");
+    #endif
 
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
@@ -109,39 +146,73 @@ int main (int argc, char ** argv)
 
     sigaction(SIGUSR1, &action, NULL);
 
+    #if DEBUG
+        fprintf(stderr,"(main) finished signal handling generation\n");
+        fprintf(stderr,"(main) Creating polling data\n");
+    #endif
+
     int monitor = epoll_create1(0);
     struct epoll_event events[MAX_EVENTS];
 
     int  reading_fd;
     FILE * files[2];
+    
 
     while (1)
     {
         switch (state)
         {
-            case wait:    
+            case wait:  
+                #if DEBUG
+                    fprintf(stderr, "(wait) waiting for packets to arrive\n");
+                #endif
+
                 int n = epoll_wait(monitor, events, MAX_EVENTS, -1);
-                if (n == -1) continue;
+                if (n == -1) {
+                    continue;
+                }
+
+                #if DEBUG
+                    fprintf(stderr, "(wait) new packet has arrived!\n");
+                #endif
+
             
                 for (int i = 0; i < n; i++)
                 {
                     for (int x = 0; x < get_number_items(clients); x++)
                     {
+                        #if DEBUG
+                            fprintf(stderr, "(wait) Looping through new packets\n");
+                        #endif
+
                         struct client * selected_client;
                         get_item(clients, x, (void **) &selected_client);
+
+                        #if DEBUG
+                            fprintf(stderr, "(wait) Selected Player\n");
+                        #endif
                         
                         if (selected_client->reading_fd == events[i].data.fd)
                         {
                             char buffer[100];
-                            if (fgets(buffer, sizeof(buffer), selected_client->reading) == NULL)
+                            ssize_t bytes = read(selected_client->reading_fd, buffer, sizeof(buffer) - 1);
+
+                            if (bytes <= 0)
                             {
                                 push_node_message_queue(message_queue, "Disconnect", selected_client);
                                 continue;
                             }
 
-                            char * message = (char *) malloc(strlen(buffer));
+                            char * message = (char *) malloc(strlen(buffer) + 1);
                             strcpy(message, buffer);
-                            
+
+                            #if DEBUG
+                                fprintf(stderr, "(wait) starting new node push\n");
+                                fprintf(stderr, "(wait) push message %p\n", message);
+                                fprintf(stderr, "(wait) push message q %p\n", message_queue);
+                                fprintf(stderr, "(wait) push client %p\n", selected_client);
+                            #endif
+
                             push_node_message_queue(message_queue, message, selected_client);
                         }
                     }   
@@ -149,15 +220,32 @@ int main (int argc, char ** argv)
             break;
 
             case connect:
+                #if DEBUG
+                    fprintf(stderr, "(connect) connecting a new client to server!\n");
+                    fprintf(stderr, "(connect) PID: %d\n", pid);
+                    fprintf(stderr, "(connect) reading_fd: %d\n", reading_fd);
+                #endif
+
                 create_pipes(pid);
                 kill(pid, SIGUSR2);
                 open_pipes_server(files, pid, &reading_fd);
                 state = login;
+
+                #if DEBUG
+                    fprintf(stderr, "(connect) finish connecting a client to the server!\n");
+                    fprintf(stderr, "(connect) reading_fd: %d\n", reading_fd);
+                #endif
             break;
 
             case login:
+                #if DEBUG
+                    fprintf(stderr, "(login) started loggin\n");
+                #endif
+
                 char line[256];
-                if (fgets(line, 256, files[1]) == NULL)  // pipe broken, client died
+                ssize_t bytes = read(fileno(files[1]), line, sizeof(line) - 1);
+
+                if (bytes <= 0)
                 {
                     state = disconnect;
                     continue;
@@ -172,6 +260,10 @@ int main (int argc, char ** argv)
                     int status = check_user_login(argument, "users.txt");
                     if (status == 1)
                     {
+                        #if DEBUG
+                            fprintf(stderr, "(login) new client has loggedin!\n");
+                        #endif
+
                         fprintf(files[0], "%d\n", status);
                         fflush(files[0]);
 
@@ -179,10 +271,18 @@ int main (int argc, char ** argv)
                         create_client(&new_client, reading_fd, files[1], files[0], pid);
                         push_dynamic_manager(clients, (void *) new_client);
 
+                        #if DEBUG
+                            fprintf(stderr, "(login) new client has loggedin finished!\n");
+                        #endif
+
                         struct epoll_event event;
                         event.events = EPOLLIN;
                         event.data.fd = reading_fd;
                         epoll_ctl(monitor, EPOLL_CTL_ADD, reading_fd, &event);
+
+                        #if DEBUG
+                            fprintf(stderr, "(connect) epoll has been registered\n");
+                        #endif
 
                         state = wait;
                         continue;
@@ -214,10 +314,16 @@ int main (int argc, char ** argv)
             break;
 
             case disconnect:
+                #if DEBUG
+                    fprintf(stderr, "(disconnect) disconnecting the new client!\n");
+                #endif
+
+                kill(pid, SIGUSR2);
                 close_and_unlink_pipes(files, pid);
                 pid = 0;
                 reading_fd = 0;
                 state = wait;
+
             break;
         }
     }

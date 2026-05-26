@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "manager.h"
+#include "debug.h"
 
 
 /*************************************************************************

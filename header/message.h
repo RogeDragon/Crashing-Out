@@ -7,6 +7,7 @@
 #include "command.h"
 #include "manager.h"
 #include "buffer.h"
+#include <signal.h>
 
 
 /*************************************************************************
@@ -23,7 +24,7 @@ struct node
 
 struct message_queue
 {
-    int size;
+    sig_atomic_t size;
     struct node *   head;
     struct node *   tail;
 
@@ -38,6 +39,7 @@ struct message_queue
 void create_message_queue(struct message_queue ** new_message_queue);
 void push_node_message_queue(struct message_queue * selected_message_queue, char * value, struct client * client);
 void pop_node_message_queue(struct message_queue * selected_message_queue, struct node ** returned_node);
+void push_node(struct message_queue * selected_message_queue, char * value, struct client * client);
 
 /*************************************************************************
     Thread Pool Structs

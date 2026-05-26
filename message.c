@@ -1,5 +1,6 @@
 
 #include "message.h"
+#include "debug.h"
 
 /*************************************************************************
     Message Queue 'Member Functions'
@@ -19,55 +20,74 @@ void create_message_queue(struct message_queue ** new_message_queue)
     //printf("Message Created\n");
 }
 
+void push_node(struct message_queue * selected_message_queue, char * value, struct client * client)
+{
+    struct node * new_node = (struct node *) malloc( sizeof( struct node ) );
+    new_node->next     = NULL;
+    new_node->previous = NULL;
+    new_node->client       = client;
+    new_node->message      = value;
+
+    if (selected_message_queue->head == NULL && selected_message_queue->tail == NULL)
+    {
+        selected_message_queue->head = new_node;
+        selected_message_queue->tail = new_node;
+    }
+    else
+    {
+        new_node->previous = selected_message_queue->tail;
+        selected_message_queue->tail->next = new_node;
+        selected_message_queue->tail = selected_message_queue->tail->next;
+    }
+
+    selected_message_queue->size++;
+
+    #if DEBUG
+        printf("(push node): %d\n", selected_message_queue->size);
+    #endif
+
+    pthread_cond_signal( &(selected_message_queue->queue_condition) );
+    //printf("Message Pushed\n");
+
+    #if DEBUG
+        fprintf(stderr, "(push node):Finished Push Node\n");
+    #endif
+}
+
 void push_node_message_queue(struct message_queue * selected_message_queue, char * value, struct client * client)
 {
     pthread_mutex_lock( &(selected_message_queue->message_queue_lock) );
-
-    struct node * new_node = (struct node *) malloc( sizeof( struct node ) );
-    new_node->next         = NULL;
-    new_node->previous     = selected_message_queue->tail;
-    
-    new_node->client       = client;
-    new_node->message      = value;
-    
-    selected_message_queue->size++;
-    selected_message_queue->tail = new_node;
-
-    if (selected_message_queue->head == NULL) {
-        selected_message_queue->head = new_node;
-    }
-
-    pthread_cond_signal( &(selected_message_queue->queue_condition) );
+    push_node(selected_message_queue, value, client);
     pthread_mutex_unlock( &(selected_message_queue->message_queue_lock) );
-
-    //printf("Message Pushed\n");
+    
+    #if DEBUG
+        fprintf(stderr, "(push node):Finished Push Node\n");
+    #endif
 }
 
 void pop_node_message_queue(struct message_queue * selected_message_queue, struct node ** returned_node)
 {
 
     pthread_mutex_lock( &(selected_message_queue->message_queue_lock) );
-    while ( selected_message_queue->size == 0 )
+    while ( selected_message_queue->head == NULL )
     {
         pthread_cond_wait( &(selected_message_queue->queue_condition), &(selected_message_queue->message_queue_lock) );
     }
 
-    //printf("Message Popped\n");
-
-    //printf("Ptr Dereference Start\n");
     *returned_node = selected_message_queue->head;
-    //printf("Ptr Dereference End\n");
-
-    if (selected_message_queue->head != NULL) {
+    if (selected_message_queue->head->next == NULL && selected_message_queue->head->previous == NULL)
+    {
+        selected_message_queue->head = NULL;
+        selected_message_queue->tail = NULL;
+    }
+    else 
+    {
         selected_message_queue->head = selected_message_queue->head->next;
-
-        (*returned_node)->next = NULL;
-        (*returned_node)->previous = NULL;
-
-        selected_message_queue->size--;
+        (*returned_node)->next->previous = NULL;
+        (*returned_node)->next     = NULL;
     }
 
-    //printf("Message Popped\n");
+    selected_message_queue->size--;
 
     pthread_mutex_unlock( &(selected_message_queue->message_queue_lock) );
 }

@@ -1,6 +1,7 @@
 
 #include "command.h"
 #include "network.h"
+#include "debug.h"
 
 bool check_and_convert_arguement(char * arg, int * result)
 {
@@ -31,21 +32,33 @@ void sort_command(char * raw_command, struct client * client,  struct dynamic_ma
         arguments[i] = strtok(NULL, " ");
     }
 
-    execute_command(instruction, arguments, client, clients, canvas_manager, sprite_manager, placement_manager, output_buffer);
+    execute_command( instruction, arguments, client, clients, canvas_manager, sprite_manager, placement_manager, output_buffer);
 }
 
 void execute_command(char * instruction, char ** arguments, struct client * client, struct dynamic_manager * clients, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
 {
-    printf("Instruction: %s\n", instruction);
+    #if DEBUG
+    printf("(execute command): %s\n", instruction);
+    #endif
 
     if (strcmp(instruction, "create_canvas") == 0)
     {
+        #if DEBUG
+            fprintf(stderr, "(create canvas): checking witdth\n");
+            fprintf(stderr, "(create canvas): %s\n", arguments[0]);
+        #endif
+
         int width;
         if (check_and_convert_arguement(arguments[0], &width))
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
             return;
         }
+
+        #if DEBUG
+            fprintf(stderr, "(create canvas): checking height\n");
+            fprintf(stderr, "(create canvas): %s\n", arguments[1]);
+        #endif
 
         int height;
         if (check_and_convert_arguement(arguments[1], &height))
@@ -54,6 +67,11 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
             return;
         }
 
+        #if DEBUG
+            fprintf(stderr, "(create canvas): checking colour\n");
+            fprintf(stderr, "(create canvas): %s\n", arguments[2]);
+        #endif
+
         int colour;
         if (check_and_convert_arguement(arguments[2], &colour))
         {
@@ -61,17 +79,34 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
             return;
         }
 
+        #if DEBUG
+            fprintf(stderr, "(create canvas): begin pushing new canvas\n");
+        #endif
+
         struct thread_safe_canvas * canvas;
         create_thread_safe_canvas(&canvas, width, height, colour);
         push_dynamic_manager(canvas_manager, (void *) canvas);
         push_dynamic_manager(client->shared_canvas, (void *) canvas);
 
+        #if DEBUG
+            fprintf(stderr, "(create canvas): finish pushing new canvas\n");
+        #endif
+
+        #if DEBUG
+            fprintf(stderr, "(create canvas): adding message to output buffer\n");
+        #endif
+
         char message[100];
         sprintf(message, "0 %p", canvas);
         push_packet(output_buffer, message, get_avaliable_id(client), client);
+
+        #if DEBUG
+            fprintf(stderr, "(create canvas): finish adding message to output buffer\n");
+        #endif
     }
     else if (strcmp(instruction, "destroy_canvas") == 0)
     {
+
         if (check_dynamic_manager(canvas_manager, (void *) arguments[0])) 
         {
             push_packet(output_buffer, "-2", get_avaliable_id(client), client);
@@ -357,6 +392,10 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     else
     {
     }
+
+    #if DEBUG
+        printf("(execute command): finished\n");
+    #endif
 }
 
 /*
