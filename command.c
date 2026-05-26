@@ -354,6 +354,9 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
         pop_selected_item(clients, client, (void **) &selected_client);
         destroy_client(selected_client);
     }
+    else
+    {
+    }
 }
 
 /*

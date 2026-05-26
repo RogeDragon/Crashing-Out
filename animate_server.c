@@ -133,7 +133,11 @@ int main (int argc, char ** argv)
                         if (selected_client->reading_fd == events[i].data.fd)
                         {
                             char buffer[100];
-                            fgets(buffer, sizeof(buffer), selected_client->reading);
+                            if (fgets(buffer, sizeof(buffer), selected_client->reading) == NULL)
+                            {
+                                push_node_message_queue(message_queue, "Disconnect", selected_client);
+                                continue;
+                            }
 
                             char * message = (char *) malloc(strlen(buffer));
                             strcpy(message, buffer);
@@ -148,18 +152,16 @@ int main (int argc, char ** argv)
                 create_pipes(pid);
                 kill(pid, SIGUSR2);
                 open_pipes_server(files, pid, &reading_fd);
-
-                struct epoll_event event;
-                event.events = EPOLLIN;
-                event.data.fd = reading_fd;
-                epoll_ctl(monitor, EPOLL_CTL_ADD, reading_fd, &event);
-
                 state = login;
             break;
 
             case login:
                 char line[256];
-                fgets(line, 256, files[1]);
+                if (fgets(line, 256, files[1]) == NULL)  // pipe broken, client died
+                {
+                    state = disconnect;
+                    continue;
+                }
 
                 char command[128];
                 char argument[128];
@@ -176,6 +178,11 @@ int main (int argc, char ** argv)
                         struct client * new_client;
                         create_client(&new_client, reading_fd, files[1], files[0], pid);
                         push_dynamic_manager(clients, (void *) new_client);
+
+                        struct epoll_event event;
+                        event.events = EPOLLIN;
+                        event.data.fd = reading_fd;
+                        epoll_ctl(monitor, EPOLL_CTL_ADD, reading_fd, &event);
 
                         state = wait;
                         continue;
@@ -208,6 +215,8 @@ int main (int argc, char ** argv)
 
             case disconnect:
                 close_and_unlink_pipes(files, pid);
+                pid = 0;
+                reading_fd = 0;
                 state = wait;
             break;
         }

@@ -132,17 +132,30 @@ int find_selected_item(struct dynamic_manager * dynamic_manager, void * selected
     return 1;
 }
 
+static int pop_item_unlocked(struct dynamic_manager * dynamic_manager, void ** returned_value, int index)
+{
+    *returned_value = dynamic_manager->struct_array[index];
+    for (int x = index; x < dynamic_manager->number_items - 1; x++)
+    {
+        dynamic_manager->struct_array[x] = dynamic_manager->struct_array[x + 1];
+    }
+    dynamic_manager->number_items--;
+    return 0;
+}
+
 int pop_selected_item(struct dynamic_manager * dynamic_manager, void * selected_item, void ** returned_value)
 {
+    pthread_mutex_lock(&dynamic_manager->manager_mutex);
     for (int x = 0; x < dynamic_manager->number_items; x++)
     {
-        void * current_item = (dynamic_manager->struct_array)[x];
-        if (current_item == selected_item)
+        if (dynamic_manager->struct_array[x] == selected_item)
         {
-            pop_dynamic_manager_item(dynamic_manager, returned_value, x);
+            pop_item_unlocked(dynamic_manager, returned_value, x);
+            pthread_mutex_unlock(&dynamic_manager->manager_mutex);
             return 0;
         }
     }
+    pthread_mutex_unlock(&dynamic_manager->manager_mutex);
     return 1;
 }
 

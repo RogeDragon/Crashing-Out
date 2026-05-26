@@ -63,6 +63,11 @@ void * send_to_server(void * args)
             case running:
                 fgets(buffer, 100, stdin);
 
+                if (strcmp(buffer, "Disconnect") == 0)
+                {
+                    state = disconnect;
+                }
+
                 fprintf(files[1], "%s\n", buffer);
                 fflush(files[1]);
             break;
@@ -112,7 +117,7 @@ void * recieve_from_server(void * args)
 
                     state = disconnect;
                 }
-
+                memset(buffer, 0, 100);
             break;
 
             case running:
