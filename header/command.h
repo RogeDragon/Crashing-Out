@@ -14,7 +14,7 @@
 
 
 bool check_and_convert_arguement(char * arg, int * result);
-void sort_command(char * raw_command, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer);
-void execute_command(char * instruction, char ** arguments, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer);
+void sort_command(char * raw_command, struct client * client, struct dynamic_manager * clients, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer);
+void execute_command(char * instruction, char ** arguments, struct client * client, struct dynamic_manager * clients, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer);
 
 #endif

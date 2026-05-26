@@ -27,20 +27,26 @@ enum server_states
 volatile sig_atomic_t state = wait;
 volatile sig_atomic_t pid   = 0;
 
+struct handel_disconnect_args 
+{
+    struct dynamic_manager * clients;
+    struct message_queue * message_queue;
+};
+
 void * handel_disconnect(void *args)
 {
-    struct dynamic_manager * clients = (struct dynamic_manager *) args;
+    struct handel_disconnect_args * args_val = (struct handel_disconnect_args *) args;
 
     while (1)
     {
-        for (int x = 0; i < get_number_items(clients); i++)
+        for (int x = 0; x < get_number_items(args_val->clients); x++)
         {
             struct client * selected_client;
-            get_item(clients, x, (void **) &selected_client);
+            get_item(args_val->clients, x, (void **) &selected_client);
 
             if (kill(selected_client->client_process_id, SIGUSR1) == -1)
             {
-                push_node_message_queue(message_queue, "Disconnect", selected_client);
+                push_node_message_queue(args_val->message_queue, "Disconnect", selected_client);
             }
         }
         sleep(1);
@@ -81,10 +87,15 @@ int main (int argc, char ** argv)
     create_buffer(&buffer);
 
     pthread_t client_checker;
-    pthread_create(&client_checker, NULL, handel_disconnect, (void *) clients);
+
+    struct handel_disconnect_args * args = malloc( sizeof( struct handel_disconnect_args ) );
+    args->clients = clients;
+    args->message_queue = message_queue;
+
+    pthread_create(&client_checker, NULL, handel_disconnect, (void *) args);
 
     struct threadpool * threadpool;
-    intialise_threadpool( atoi(argv[1]) , &threadpool, message_queue, canvas_manager, sprites, placements, buffer);
+    intialise_threadpool( atoi(argv[1]) , &threadpool, message_queue, clients, canvas_manager, sprites, placements, buffer);
 
     //running the server
     int server_pid = getpid();
@@ -108,7 +119,10 @@ int main (int argc, char ** argv)
     {
         switch (state)
         {
-            case wait:                
+            case wait:    
+                int n = epoll_wait(monitor, events, MAX_EVENTS, -1);
+                if (n == -1) continue;
+            
                 for (int i = 0; i < n; i++)
                 {
                     for (int x = 0; x < get_number_items(clients); x++)

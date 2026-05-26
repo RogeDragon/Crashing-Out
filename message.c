@@ -81,6 +81,7 @@ void * worker_thread(void * arg)
     struct threadpool * provided_threadpool = (struct threadpool * ) arg;
     struct message_queue * message_queue = provided_threadpool->message_queue;
 
+    struct dynamic_manager * clients           = provided_threadpool->clients;
     struct dynamic_manager * canvas_manager    = provided_threadpool->canvas_manager;
     struct dynamic_manager * sprite_manager    = provided_threadpool->sprite_manager;
     struct dynamic_manager * placement_manager = provided_threadpool->placement_manager;
@@ -92,7 +93,7 @@ void * worker_thread(void * arg)
         struct node * returned_node;
         pop_node_message_queue(message_queue, &returned_node); // this waits the thread with a condition variable!
 
-        sort_command(returned_node->message, returned_node->client, canvas_manager, sprite_manager, placement_manager, buffer);
+        sort_command(returned_node->message, returned_node->client, clients,  canvas_manager, sprite_manager, placement_manager, buffer);
         
         free(returned_node->message);
         free(returned_node);
@@ -105,7 +106,8 @@ void * worker_thread(void * arg)
 
 int intialise_threadpool(int number_threads, struct threadpool ** threadpool, 
                         struct message_queue * message_queue,
-                        struct dynamic_manager * canvas_manager, 
+                        struct dynamic_manager * canvas_manager,
+                        struct dynamic_manager * client_manager,
                         struct dynamic_manager * sprite_manager,
                         struct dynamic_manager * placement_manager,
                         struct buffer * buffer)
@@ -113,6 +115,7 @@ int intialise_threadpool(int number_threads, struct threadpool ** threadpool,
     *threadpool = (struct threadpool *) malloc( sizeof(struct threadpool) );
     (*threadpool)->number_threads    = number_threads;
     (*threadpool)->message_queue     = message_queue;
+    (*threadpool)->clients           = client_manager;
     (*threadpool)->canvas_manager    = canvas_manager;
     (*threadpool)->sprite_manager    = sprite_manager;
     (*threadpool)->placement_manager = placement_manager;

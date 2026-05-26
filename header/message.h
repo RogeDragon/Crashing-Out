@@ -49,6 +49,7 @@ struct threadpool
     pthread_t * threadpool_threads;
     struct message_queue * message_queue;
 
+    struct dynamic_manager * clients;
     struct dynamic_manager * canvas_manager;
     struct dynamic_manager * sprite_manager;
     struct dynamic_manager * placement_manager;
@@ -63,6 +64,7 @@ struct threadpool
 void * worker_thread(void * arg);
 int intialise_threadpool(int number_threads, struct threadpool ** threadpool, 
                         struct message_queue * message_queue,
+                        struct dynamic_manager * client_manager,
                         struct dynamic_manager * canvas_manager, 
                         struct dynamic_manager * sprite_manager,
                         struct dynamic_manager * placement_manager,

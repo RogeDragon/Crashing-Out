@@ -351,7 +351,7 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     else if (strcmp(instruction, "Disconnect" ) == 0)
     {
         struct client * selected_client;
-        pop_selected_item(clients, client, &selected_client);
+        pop_selected_item(clients, client, (void **) &selected_client);
         destroy_client(selected_client);
     }
 }
