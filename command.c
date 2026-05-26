@@ -21,7 +21,7 @@ bool check_and_convert_arguement(char * arg, int * result)
 
 #define NUM_ARGS 5
 
-void sort_command(char * raw_command, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
+void sort_command(char * raw_command, struct client * client,  struct dynamic_manager * clients, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
 {
     char * instruction = strtok(raw_command, " ");
     char * arguments[NUM_ARGS];
@@ -31,10 +31,10 @@ void sort_command(char * raw_command, struct client * client, struct dynamic_man
         arguments[i] = strtok(NULL, " ");
     }
 
-    execute_command(instruction, arguments, client, canvas_manager, sprite_manager, placement_manager, output_buffer);
+    execute_command(instruction, arguments, client, clients, canvas_manager, sprite_manager, placement_manager, output_buffer);
 }
 
-void execute_command(char * instruction, char ** arguments, struct client * client, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
+void execute_command(char * instruction, char ** arguments, struct client * client, struct dynamic_manager * clients, struct dynamic_manager * canvas_manager, struct dynamic_manager * sprite_manager, struct dynamic_manager * placement_manager, struct buffer * output_buffer)
 {
     printf("Instruction: %s\n", instruction);
 
@@ -347,6 +347,12 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     else if (strcmp(instruction, "destroy_placement" ) == 0)
     {
 
+    }
+    else if (strcmp(instruction, "Disconnect" ) == 0)
+    {
+        struct client * selected_client;
+        pop_selected_item(clients, client, &selected_client);
+        destroy_client(selected_client);
     }
 }
 

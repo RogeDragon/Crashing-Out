@@ -146,6 +146,7 @@ int main (int argc, char ** argv)
     action.sa_flags = SA_SIGINFO;
     sigemptyset(&action.sa_mask);
     sigaction(SIGUSR2, &action, NULL);
+    sigaction(SIGUSR1, &action, NULL);
 
     kill(server_pid, SIGUSR1);
 

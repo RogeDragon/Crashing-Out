@@ -27,6 +27,26 @@ enum server_states
 volatile sig_atomic_t state = wait;
 volatile sig_atomic_t pid   = 0;
 
+void * handel_disconnect(void *args)
+{
+    struct dynamic_manager * clients = (struct dynamic_manager *) args;
+
+    while (1)
+    {
+        for (int x = 0; i < get_number_items(clients); i++)
+        {
+            struct client * selected_client;
+            get_item(clients, x, (void **) &selected_client);
+
+            if (kill(selected_client->client_process_id, SIGUSR1) == -1)
+            {
+                push_node_message_queue(message_queue, "Disconnect", selected_client);
+            }
+        }
+        sleep(1);
+    }
+}
+
 void handel_new_user(int signal, siginfo_t * info, void * context)
 {
     if (signal == SIGUSR1)
@@ -60,6 +80,9 @@ int main (int argc, char ** argv)
     struct buffer * buffer;
     create_buffer(&buffer);
 
+    pthread_t client_checker;
+    pthread_create(&client_checker, NULL, handel_disconnect, (void *) clients);
+
     struct threadpool * threadpool;
     intialise_threadpool( atoi(argv[1]) , &threadpool, message_queue, canvas_manager, sprites, placements, buffer);
 
@@ -85,10 +108,7 @@ int main (int argc, char ** argv)
     {
         switch (state)
         {
-            case wait:
-                int n = epoll_wait(monitor, events, MAX_EVENTS, -1);
-                if (n == -1) continue;
-                
+            case wait:                
                 for (int i = 0; i < n; i++)
                 {
                     for (int x = 0; x < get_number_items(clients); x++)
