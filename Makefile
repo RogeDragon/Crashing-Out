@@ -29,3 +29,4 @@ animate_client: $(CLIENT_OBJS)
 
 clean:
 	rm -f animate_server animate_client $(SERVER_OBJS) $(CLIENT_OBJS)
+	rm -rf ./FIFO_*
