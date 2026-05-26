@@ -20,12 +20,11 @@ pthread_mutex_t name_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void signal_handler(int signum, siginfo_t* info, void * context)
 {
-    if (signum == SIGUSR2)
-    {
-        (void) context;
-        (void) info;
-        state = login;
-    }
+    (void) context;
+    (void) info;
+
+    if (signum == SIGUSR2) state = login;
+    if (signum == SIGUSR1) alive = 0;
 }
 
 void * send_to_server(void * args)
@@ -57,23 +56,32 @@ void * send_to_server(void * args)
                     strcpy(name, argument);
                     pthread_mutex_unlock(&name_lock);
                 }
-                else if (strcmp(instruction, "Disconnect\n") == 0)
+                else if (strcmp(instruction, "Disconnect") == 0)
                 {
-                    fprintf(files[1], "Disconnect\n");
+                    fprintf(files[1], "Disconnect");
+                    fflush(files[1]);
                     state = disconnect;
                 }
+
+                while (state == login);
             break;
+
+
 
             case running:
                 #if DEBUG
                     fprintf(stderr, "(running client) out\n");
                 #endif
 
-                char * running_status_out = fgets(buffer, 100, stdin);
+                ssize_t bytes_read = read(STDIN_FILENO, buffer, 99);
 
-                if (running_status_out != NULL)
+                if (!alive) return NULL;
+
+                if (bytes_read > 0)
                 {
-                    if (strcmp(buffer, "Disconnect\n") == 0)
+                    buffer[bytes_read] = '\0';  /* null-terminate manually */
+
+                    if ((strcmp(buffer, "Disconnect\n") == 0) || (strcmp(buffer, "Disconnect") == 0))
                     {
                         state = disconnect;
                     }
@@ -87,7 +95,6 @@ void * send_to_server(void * args)
                 #if DEBUG
                     fprintf(stderr, "(disconnect client) out\n");
                 #endif
-
                 alive = 0;
             break;
         }
@@ -110,7 +117,13 @@ void * recieve_from_server(void * args)
                     fprintf(stderr, "(loggin client) in\n");
                 #endif
 
-                fgets(buffer, 100, files[0]); //blocks until there is some data
+                ssize_t bytes = read(fileno(files[0]), buffer, 99);
+                if (bytes <= 0) 
+                    break;
+                
+                buffer[bytes] = '\0';
+                printf("%s", buffer);
+                fflush(stdout);
 
                 int status = atoi(buffer);
 
@@ -145,6 +158,12 @@ void * recieve_from_server(void * args)
                 #endif
 
                 char * running_status_in = fgets(buffer, 100, files[0]);
+
+                if (running_status_in == NULL)
+                {
+                    alive = 0;
+                    break;
+                }
 
                 if (running_status_in != NULL)
                 {

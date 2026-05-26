@@ -318,7 +318,7 @@ int main (int argc, char ** argv)
                     fprintf(stderr, "(disconnect) disconnecting the new client!\n");
                 #endif
 
-                kill(pid, SIGUSR2);
+                kill(pid, SIGUSR1);
                 close_and_unlink_pipes(files, pid);
                 pid = 0;
                 reading_fd = 0;

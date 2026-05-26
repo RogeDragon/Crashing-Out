@@ -2,6 +2,7 @@
 #include "command.h"
 #include "network.h"
 #include "debug.h"
+#include <signal.h>
 
 bool check_and_convert_arguement(char * arg, int * result)
 {
@@ -383,10 +384,25 @@ void execute_command(char * instruction, char ** arguments, struct client * clie
     {
 
     }
-    else if (strcmp(instruction, "Disconnect" ) == 0)
+    else if ((strcmp(instruction, "Disconnect") == 0) || (strcmp(instruction, "Disconnect\n") == 0))
     {
+        #if DEBUG
+            fprintf(stdout, "Disconnect!");
+        #endif
+
+        pthread_mutex_lock(&clients->manager_mutex);
+
         struct client * selected_client;
-        pop_selected_item(clients, client, (void **) &selected_client);
+        pop_selected_item(clients, (void *) client, (void **) &selected_client);
+
+        pthread_mutex_unlock(&clients->manager_mutex);
+
+        if (selected_client == NULL)
+        {
+            return;
+        }
+
+        kill(selected_client->client_process_id, SIGUSR2);
         destroy_client(selected_client);
     }
     else
